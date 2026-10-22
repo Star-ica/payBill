@@ -1,0 +1,15 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Biller dashboard – PayBill</title><link rel="stylesheet" href="css/style.css"></head><body>
+<nav class="nav"><a class="logo" href="index.html"><i>💳</i><span>PayBill</span></a><div class="links"><a href="index.html" class="">Home</a><a href="pay.html" class="">Pay</a><a href="payments.html" class="">My payments</a><a href="biller.html" class="on">Biller</a><a href="admin.html" class="">Admin</a></div><button class="btn" id="wbtn">Connect wallet</button></nav>
+<main class="wrap"><h1>Biller dashboard</h1><p class="sub">Payments received by the connected wallet.</p><div id="gate"><div class="notice">Connect your biller wallet to continue.</div></div>
+<div id="bd" style="display:none"><div class="grid" style="padding:0 0 20px"><div class="panel" style="margin:0"><div class="stat" id="tot">0</div><div class="sub" style="margin:0">Total received</div></div><div class="panel" style="margin:0"><div class="stat" id="cn">0</div><div class="sub" style="margin:0">Payments</div></div></div>
+<div class="panel"><h2>Incoming payments</h2><div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Reference</th><th>Amount</th><th>Payer</th><th>Date</th></tr></thead><tbody id="pl"></tbody></table></div></div></div></main>
+<footer>© 2026 PayBill · Built on BOT Chain<br><a href="https://botchain.ai" target="_blank" rel="noopener">BOT Chain Website</a> · <a href="https://scan.bohr.life" target="_blank" rel="noopener">BOT Chain Explorer</a></footer><div id="toast"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script><script src="js/app.js"></script>
+<script>
+document.addEventListener("ready",async()=>{
+  const ids=[...await vault.receiptsOfWallet(account)].reverse();let sum=0n,h="";
+  $("#gate").innerHTML="";$("#bd").style.display="block";
+  for(const id of ids){const r=await vault.getReceipt(id);sum+=r[3];h+=`<tr><td>${id}</td><td>${esc(r[2])}</td><td><b>${bot(r[3])}</b></td><td class="mono">${r[0].slice(0,10)}…</td><td>${when(r[4])}</td></tr>`}
+  $("#tot").textContent=bot(sum);$("#cn").textContent=ids.length;
+  $("#pl").innerHTML=h||'<tr><td colspan="5" class="empty">No payments received by this wallet yet.</td></tr>';
+});
+</script></body></html>

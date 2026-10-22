@@ -1,0 +1,24 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin – PayBill</title><link rel="stylesheet" href="css/style.css"></head><body>
+<nav class="nav"><a class="logo" href="index.html"><i>💳</i><span>PayBill</span></a><div class="links"><a href="index.html" class="">Home</a><a href="pay.html" class="">Pay</a><a href="payments.html" class="">My payments</a><a href="biller.html" class="">Biller</a><a href="admin.html" class="on">Admin</a></div><button class="btn" id="wbtn">Connect wallet</button></nav>
+<main class="wrap"><h1>Admin</h1><p class="sub">Register and manage billers.</p><div id="gate"><div class="notice">Connect your wallet to continue.</div></div>
+<div id="adm" style="display:none"><div class="panel"><h2>Register a biller</h2><div class="row" style="grid-template-columns:1fr 160px 1fr auto"><div><label>Name</label><input id="bn" placeholder="e.g. Ikeja Electric"></div><div><label>Category</label><select id="bc"><option>Electricity</option><option>Water</option><option>Internet</option><option>Airtime &amp; data</option><option>TV subscription</option><option>Education</option><option>Other</option></select></div><div><label>Payout wallet</label><input id="bw" placeholder="0x…"></div><button class="btn" id="ab">Register</button></div></div>
+<div class="panel"><h2>Billers</h2><div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Category</th><th>Wallet</th><th>Status</th><th></th></tr></thead><tbody id="bl"></tbody></table></div></div></div></main>
+<footer>© 2026 PayBill · Built on BOT Chain<br><a href="https://botchain.ai" target="_blank" rel="noopener">BOT Chain Website</a> · <a href="https://scan.bohr.life" target="_blank" rel="noopener">BOT Chain Explorer</a></footer><div id="toast"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script><script src="js/app.js"></script>
+<script>
+document.addEventListener("ready",async()=>{
+  if((await vault.admin()).toLowerCase()!==account.toLowerCase()){$("#gate").innerHTML='<div class="notice">Only the contract admin can use this page.</div>';return}
+  $("#gate").innerHTML="";$("#adm").style.display="block";list();
+});
+async function list(){
+  const n=Number(await vault.billerCount());let h="";
+  for(let i=0;i<n;i++){const b=await vault.getBiller(i);
+    h+=`<tr><td><b>${esc(b[0])}</b></td><td>${esc(b[1])}</td><td class="mono">${b[2]}</td><td>${b[3]?'<span class="badge ok">Active</span>':'<span class="badge off">Disabled</span>'}</td><td><button class="btn sm ${b[3]?"danger":""}" data-t="${i}" data-a="${b[3]?0:1}">${b[3]?"Disable":"Enable"}</button></td></tr>`}
+  $("#bl").innerHTML=h||'<tr><td colspan="5" class="empty">No billers registered yet.</td></tr>';
+  document.querySelectorAll("[data-t]").forEach(b=>b.onclick=async()=>{if(await tx(vault.setBillerActive(b.dataset.t,b.dataset.a==="1"),"Biller updated"))list()});
+}
+$("#ab").onclick=async()=>{
+  const n=$("#bn").value.trim(),w=$("#bw").value.trim();
+  if(!n||!ethers.isAddress(w))return toast("Enter a name and a valid wallet",1);
+  if(await tx(vault.addBiller(n,$("#bc").value,w),"Biller registered")){$("#bn").value="";$("#bw").value="";list()}
+};
+</script></body></html>

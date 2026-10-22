@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My payments – PayBill</title><link rel="stylesheet" href="css/style.css"></head><body>
+<nav class="nav"><a class="logo" href="index.html"><i>💳</i><span>PayBill</span></a><div class="links"><a href="index.html" class="">Home</a><a href="pay.html" class="">Pay</a><a href="payments.html" class="on">My payments</a><a href="biller.html" class="">Biller</a><a href="admin.html" class="">Admin</a></div><button class="btn" id="wbtn">Connect wallet</button></nav>
+<main class="wrap"><h1>My payments</h1><p class="sub">Your receipts and recurring schedules.</p>
+<div class="panel"><h2>Receipts</h2><div id="rc"><div class="notice">Connect your wallet to see your receipts.</div></div></div>
+<div class="panel"><h2>Recurring schedules</h2><div id="sc"><div class="notice">Connect your wallet to see your schedules.</div></div></div>
+<div class="panel"><h2>Verify a receipt</h2><div class="row2"><input id="vn" type="number" min="0" placeholder="Receipt number"><button class="btn" id="vb">Verify</button></div><div id="vr" style="margin-top:12px"></div></div></main>
+<footer>© 2026 PayBill · Built on BOT Chain<br><a href="https://botchain.ai" target="_blank" rel="noopener">BOT Chain Website</a> · <a href="https://scan.bohr.life" target="_blank" rel="noopener">BOT Chain Explorer</a></footer><div id="toast"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script><script src="js/app.js"></script>
+<script>
+const card=async(id,r)=>{const b=await billerOf(r[1]);return `<div class="rec"><div class="top"><span class="badge">Receipt #${id}</span><span>${when(r[4])}</span></div><p><b>${esc(b.name)}</b> · ${esc(b.cat)}</p><p>Reference: <b>${esc(r[2])}</b></p><div class="top"><span class="price" style="font-size:18px">${bot(r[3])}</span><button class="btn sm ghost" data-p="${id}">Print</button></div></div>`};
+function printRec(id,r,b){const w=open("","_blank");w.document.write(`<body style="font-family:system-ui;max-width:420px;margin:40px auto"><h2>PayBill receipt #${id}</h2><p><b>${esc(b.name)}</b> (${esc(b.cat)})</p><p>Reference: ${esc(r[2])}</p><p>Amount: ${bot(r[3])}</p><p>Date: ${when(r[4])}</p><p style="word-break:break-all">Payer: ${r[0]}</p><p style="color:#666;font-size:12px">Recorded on BOT Chain</p></body>`);w.document.close();w.print()}
+document.addEventListener("ready",async()=>{
+  const ids=[...await vault.receiptsOf(account)].reverse();let h="";
+  for(const id of ids)h+=await card(id,await vault.getReceipt(id));
+  $("#rc").innerHTML=h||'<p class="empty">No payments yet.</p>';
+  document.querySelectorAll("[data-p]").forEach(b=>b.onclick=async()=>{const r=await vault.getReceipt(b.dataset.p);printRec(b.dataset.p,r,await billerOf(r[1]))});
+  loadSch();
+});
+async function loadSch(){
+  const ids=[...await vault.schedulesOf(account)].reverse(),now=Date.now()/1000;let h="";
+  for(const id of ids){const s=await vault.getSchedule(id),st=await vault.getScheduleState(id),b=await billerOf(s[1]),due=st[3]&&Number(st[2])<=now;
+    h+=`<div class="rec"><div class="top"><span class="badge ${st[3]?"ok":"off"}">${st[3]?"Active":"Finished / cancelled"}</span><span>Schedule #${id}</span></div><p><b>${esc(b.name)}</b> · Ref ${esc(s[2])}</p><p>${bot(s[3])} every ${Number(st[0])/86400} day(s) · ${st[1]} payment(s) left${st[3]?" · next "+(due?"<b>due now</b>":when(st[2])):""}</p><div class="row2">${due?`<button class="btn sm" data-r="${id}">Run payment now</button>`:""}${st[3]?`<button class="btn sm danger" data-x="${id}">Cancel &amp; refund</button>`:""}</div></div>`}
+  $("#sc").innerHTML=h||'<p class="empty">No schedules yet.</p>';
+  document.querySelectorAll("[data-r]").forEach(b=>b.onclick=async()=>{if(await tx(vault.runSchedule(b.dataset.r),"Payment sent"))location.reload()});
+  document.querySelectorAll("[data-x]").forEach(b=>b.onclick=async()=>{if(confirm("Cancel and refund the remaining balance?")&&await tx(vault.cancelSchedule(b.dataset.x),"Schedule cancelled, refunded"))loadSch()});
+}
+$("#vb").onclick=async()=>{
+  const n=$("#vn").value.trim();if(n===""||!ro)return toast("Enter a receipt number",1);
+  try{const r=await ro.getReceipt(n),b=await billerOf(r[1]);$("#vr").innerHTML=`<p class="status ok" style="font-size:18px">✔ Valid receipt</p><dl class="kv"><dt>Biller</dt><dd>${esc(b.name)}</dd><dt>Reference</dt><dd>${esc(r[2])}</dd><dt>Amount</dt><dd>${bot(r[3])}</dd><dt>Date</dt><dd>${when(r[4])}</dd><dt>Payer</dt><dd class="mono">${r[0]}</dd></dl>`}
+  catch(e){$("#vr").innerHTML='<p class="status bad" style="font-size:18px">✖ No receipt with that number</p>'}
+};
+</script></body></html>

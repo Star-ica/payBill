@@ -3,7 +3,7 @@
 <main class="wrap"><h1>Biller dashboard</h1><p class="sub">Payments received by the connected wallet.</p><div id="gate"><div class="notice">Connect your biller wallet to continue.</div></div>
 <div id="bd" style="display:none"><div class="grid" style="padding:0 0 20px"><div class="panel" style="margin:0"><div class="stat" id="tot">0</div><div class="sub" style="margin:0">Total received</div></div><div class="panel" style="margin:0"><div class="stat" id="cn">0</div><div class="sub" style="margin:0">Payments</div></div></div>
 <div class="panel"><h2>Incoming payments</h2><div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Reference</th><th>Amount</th><th>Payer</th><th>Date</th></tr></thead><tbody id="pl"></tbody></table></div></div></div></main>
-<footer>© 2026 PayBill · Built on BOT Chain<br><a href="https://botchain.ai" target="_blank" rel="noopener">BOT Chain Website</a> · <a href="https://scan.bohr.life" target="_blank" rel="noopener">BOT Chain Explorer</a></footer><div id="toast"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script><script src="js/app.js"></script>
+<footer>© 2026 PayBill · Built on BOT Chain<br><a href="https://botchain.ai" target="_blank" rel="noopener">BOT Chain Website</a> · <a href="https://scan.botchain.a" target="_blank" rel="noopener">BOT Chain Explorer</a></footer><div id="toast"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script><script src="js/app.js"></script>
 <script>
 document.addEventListener("ready",async()=>{
   const ids=[...await vault.receiptsOfWallet(account)].reverse();let sum=0n,h="";

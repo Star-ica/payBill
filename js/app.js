@@ -1,6 +1,6 @@
-const CHAIN={id:968,hex:"0x3c8",name:"BOT Chain Testnet",symbol:"BOT",rpc:"https://rpc.bohr.life",explorer:"https://scan.bohr.life",website:"https://botchain.ai"};
+const CHAIN={id:677,hex:"0x2A5",name:"BOT Chain ",symbol:"BOT",rpc:"https://rpc.botchain.a",explorer:"https://scan.botchain.a",website:"https://botchain.ai"};
 // TODO: replace with your deployed PayBill address
-const CONTRACT_ADDRESS="0x06690eb0C83FfbD68002f7E041Ac7EBF64Fff792";
+const CONTRACT_ADDRESS="0xD7f9f82998a30bF040796Ae959642e24434b44B0";
 const ABI=["function admin() view returns (address)","function addBiller(string name,string category,address wallet) returns (uint256)","function setBillerActive(uint256 id,bool active)","function billerCount() view returns (uint256)","function getBiller(uint256 id) view returns (string,string,address,bool)","function pay(uint256 billerId,string reference) payable","function createSchedule(uint256 billerId,string reference,uint256 intervalDays,uint256 count) payable returns (uint256)","function runSchedule(uint256 id)","function cancelSchedule(uint256 id)","function receiptCount() view returns (uint256)","function getReceipt(uint256 id) view returns (address,uint256,string,uint256,uint256)","function receiptsOf(address a) view returns (uint256[])","function receiptsOfWallet(address a) view returns (uint256[])","function scheduleCount() view returns (uint256)","function getSchedule(uint256 id) view returns (address,uint256,string,uint256)","function getScheduleState(uint256 id) view returns (uint256,uint256,uint256,bool)","function schedulesOf(address a) view returns (uint256[])"];
 let signer,account,vault;
 const ro=/^0x0+$/.test(CONTRACT_ADDRESS)?null:new ethers.Contract(CONTRACT_ADDRESS,ABI,new ethers.JsonRpcProvider(CHAIN.rpc));

@@ -1,16 +1,719 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pay your bills on-chain – PayBill</title><link rel="stylesheet" href="css/style.css"></head><body>
-<nav class="nav"><a class="logo" href="index.html"><i>💳</i><span>PayBill</span></a><div class="links"><a href="index.html" class="on">Home</a><a href="pay.html" class="">Pay</a><a href="payments.html" class="">My payments</a><a href="biller.html" class="">Biller</a><a href="admin.html" class="">Admin</a></div><button class="btn" id="wbtn">Connect wallet</button></nav>
-<section class="hero"><span class="tag">Built on BOT Chain</span><h1>Pay your bills,<br><span>keep the proof</span></h1><p>PayBill sends payments straight to registered billers and gives you a permanent on-chain receipt. Pay once, or prepay a schedule for recurring bills.</p><a class="btn" href="pay.html">Pay a bill</a><a class="btn ghost" href="payments.html">My receipts</a></section>
-<div class="sec"><h2>Why PayBill</h2><p class="lead">Fast, direct and fully traceable.</p><div class="grid">
-<div class="card"><div class="ico">✅</div><h3>Registered billers</h3><p>Only billers approved by the admin can receive payments.</p></div>
-<div class="card"><div class="ico">⚡</div><h3>Direct settlement</h3><p>Your payment goes straight to the biller’s wallet. No middleman holds it.</p></div>
-<div class="card"><div class="ico">🧾</div><h3>Permanent receipts</h3><p>Every payment creates a numbered on-chain receipt you can print or verify.</p></div>
-<div class="card"><div class="ico">🔁</div><h3>Recurring schedules</h3><p>Prepay several months. Payments release on schedule, and you can cancel for a refund of what’s left.</p></div>
-<div class="card"><div class="ico">🏷️</div><h3>Reference-tagged</h3><p>Each payment carries your meter, account or phone number.</p></div>
-<div class="card"><div class="ico">🏢</div><h3>Biller dashboard</h3><p>Billers see every incoming payment and their total received.</p></div></div></div>
-<div class="sec"><h2>How it works</h2><p class="lead">Three steps.</p><div class="grid">
-<div class="card"><div class="num">1</div><h3>Choose a biller</h3><p>Pick your utility, ISP, school or provider.</p></div>
-<div class="card"><div class="num">2</div><h3>Enter your reference</h3><p>Add your account number and the amount, then confirm in your wallet.</p></div>
-<div class="card"><div class="num">3</div><h3>Get your receipt</h3><p>Your receipt is recorded on-chain straight away.</p></div></div></div>
-<div class="cta"><h2>Pay a bill in under a minute</h2><p>Connect your wallet and pick a biller.</p><a class="btn" href="pay.html">Start paying</a></div>
-<footer>© 2026 PayBill · Built on BOT Chain<br><a href="https://botchain.ai" target="_blank" rel="noopener">BOT Chain Website</a> · <a href="https://scan.botchain.a" target="_blank" rel="noopener">BOT Chain Explorer</a></footer><div id="toast"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script><script src="js/app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>PayBill | On-Chain Utility Payments</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #4338ca;
+            --primary-hover: #3730a3;
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+            --text-main: #111827;
+            --text-mut: #6b7280;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text-main); line-height: 1.5; padding-bottom: 40px; }
+        
+        /* Navigation */
+        nav { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 1rem; }
+        .logo { font-size: 1.25rem; font-weight: 700; text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .links { display: flex; gap: 1.5rem; }
+        .links a { text-decoration: none; color: var(--text-mut); font-weight: 500; transition: color 0.2s; cursor: pointer; }
+        .links a:hover, .links a.active { color: var(--primary); }
+        
+        /* Layout */
+        .wrap { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .mt-1 { margin-top: 1rem; } .mb-1 { margin-bottom: 1rem; }
+        
+        /* Typography */
+        h1 { font-size: 2.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+        .sub { color: var(--text-mut); font-size: 1.1rem; margin-bottom: 2rem; }
+        
+        /* Components */
+        .btn { background: var(--primary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 500; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn.ghost { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+        .btn.ghost:hover { background: #eef2ff; }
+        .btn.danger { background: var(--danger); }
+        .btn.danger:hover { background: #dc2626; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+        
+        /* Forms */
+        label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--text-main); }
+        input, select { width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; margin-bottom: 1rem; outline: none; transition: border 0.2s; }
+        input:focus, select:focus { border-color: var(--primary); }
+        .row-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end; }
+        
+        /* Tables */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+        th { font-size: 0.85rem; color: var(--text-mut); text-transform: uppercase; font-weight: 600; }
+        .mono { font-family: monospace; color: var(--text-mut); }
+        
+        /* Badges & Chips */
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+        .badge.ok { background: #d1fae5; color: #065f46; }
+        .badge.off { background: #fee2e2; color: #991b1b; }
+        .badge.neutral { background: #f3f4f6; color: #374151; }
+        
+        .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+        .chip { background: var(--bg); border: 1px solid var(--border); padding: 0.6rem 1rem; border-radius: var(--radius); cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; transition: 0.2s; }
+        .chip:hover { border-color: var(--primary); }
+        .chip.on { border-color: var(--primary); background: #eef2ff; box-shadow: 0 0 0 1px var(--primary); }
+        .chip small { color: var(--text-mut); font-size: 0.75rem; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+        .tabs button { background: none; border: none; padding: 0.5rem 0; font-weight: 500; color: var(--text-mut); cursor: pointer; border-bottom: 2px solid transparent; }
+        .tabs button.on { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .stat-val { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        
+        /* Receipt Cards */
+        .receipt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .rec { background: var(--surface); border: 1px solid var(--border); padding: 1rem; border-radius: 8px; }
+        .rec .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        
+        /* Toast */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--text-main); color: white; padding: 1rem; border-radius: 8px; box-shadow: var(--shadow); min-width: 250px; animation: slideIn 0.3s ease; }
+        .toast.error { background: var(--danger); }
+        .toast.success { background: var(--success); }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        /* Hero */
+        .hero { text-align: center; padding: 4rem 1rem; }
+        .hero span { color: var(--primary); }
+        
+        /* Notice block */
+        .notice { background: #fffbeb; color: #b45309; padding: 1rem; border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-inner">
+        <a href="#" class="logo" onclick="nav('home')">💳 PayBill</a>
+        <div class="links">
+            <a onclick="nav('home')" id="nav-home">Home</a>
+            <a onclick="nav('pay')" id="nav-pay">Pay</a>
+            <a onclick="nav('payments')" id="nav-payments">My Payments</a>
+            <a onclick="nav('biller')" id="nav-biller">Biller</a>
+            <a onclick="nav('admin')" id="nav-admin">Admin</a>
+        </div>
+        <button class="btn" id="btn-connect" onclick="connectWallet()">Connect Wallet</button>
+    </div>
+</nav>
+
+<main class="wrap">
+    
+    <!-- HOME VIEW -->
+    <div id="view-home" class="view">
+        <div class="hero">
+            <div class="badge neutral mb-1">Built on BOT Chain</div>
+            <h1>Pay your bills,<br><span>keep the proof</span></h1>
+            <p class="sub" style="max-width: 600px; margin: 0 auto 2rem auto;">
+                PayBill sends payments straight to registered billers and gives you a permanent on-chain receipt. Pay once, or prepay a schedule for recurring bills.
+            </p>
+            <button class="btn" onclick="nav('pay')">Pay a bill</button>
+            <button class="btn ghost" onclick="nav('payments')">My receipts</button>
+        </div>
+        <div class="stats-grid mt-1">
+            <div class="stat-card"><div class="badge ok mb-1">Direct</div><h3>Direct settlement</h3><p class="sub" style="font-size:0.9rem;margin:0">Payments go straight to the biller's wallet instantly.</p></div>
+            <div class="stat-card"><div class="badge ok mb-1">Traceable</div><h3>Permanent receipts</h3><p class="sub" style="font-size:0.9rem;margin:0">Every payment creates a numbered on-chain receipt.</p></div>
+            <div class="stat-card"><div class="badge ok mb-1">Automated</div><h3>Recurring schedules</h3><p class="sub" style="font-size:0.9rem;margin:0">Prepay for months. Cancel anytime for a refund.</p></div>
+        </div>
+    </div>
+
+    <!-- PAY VIEW -->
+    <div id="view-pay" class="view hidden">
+        <h1>Pay a bill</h1>
+        <p class="sub">Choose a provider, then pay now or schedule recurring payments.</p>
+        
+        <div class="panel">
+            <h2>1. Choose a biller</h2>
+            <div class="chips" id="biller-chips">Loading billers...</div>
+        </div>
+
+        <div class="panel">
+            <h2>2. Payment details</h2>
+            <div class="tabs">
+                <button class="on" id="tab-paynow" onclick="setPayMode('now')">Pay now</button>
+                <button id="tab-schedule" onclick="setPayMode('sch')">Schedule recurring</button>
+            </div>
+            
+            <label>Account / Meter / Phone Reference</label>
+            <input id="pay-ref" placeholder="e.g. 0123456789">
+            
+            <label id="lbl-amount">Amount (Tokens)</label>
+            <input id="pay-amt" type="number" step="any" min="0" placeholder="0.00" oninput="calcTotal()">
+            
+            <div id="schedule-fields" class="hidden row-grid" style="margin-bottom: 1rem;">
+                <div>
+                    <label>Pay every (days)</label>
+                    <input id="pay-interval" type="number" min="1" value="30" oninput="calcTotal()">
+                </div>
+                <div>
+                    <label>Number of payments</label>
+                    <input id="pay-count" type="number" min="1" max="24" value="3" oninput="calcTotal()">
+                </div>
+            </div>
+            
+            <div class="notice hidden" id="pay-summary"></div>
+            <button class="btn" id="btn-execute-pay" onclick="executePayment()">Pay now</button>
+        </div>
+    </div>
+
+    <!-- MY PAYMENTS VIEW -->
+    <div id="view-payments" class="view hidden">
+        <h1>My payments</h1>
+        <p class="sub">Your receipts and active recurring schedules.</p>
+        
+        <div class="panel">
+            <h2>Recurring schedules</h2>
+            <div id="my-schedules" class="receipt-grid"><p class="sub">Connect wallet to view schedules.</p></div>
+        </div>
+
+        <div class="panel">
+            <h2>Receipts</h2>
+            <div id="my-receipts" class="receipt-grid"><p class="sub">Connect wallet to view receipts.</p></div>
+        </div>
+        
+        <div class="panel">
+            <h2>Verify a receipt</h2>
+            <div style="display:flex; gap:10px; max-width: 400px;">
+                <input id="verify-id" type="number" placeholder="Receipt #" style="margin:0">
+                <button class="btn ghost" onclick="verifyReceipt()">Verify</button>
+            </div>
+            <div id="verify-result" class="mt-1"></div>
+        </div>
+    </div>
+
+    <!-- BILLER VIEW -->
+    <div id="view-biller" class="view hidden">
+        <h1>Biller Dashboard</h1>
+        <p class="sub">Payments received by your connected wallet.</p>
+        
+        <div id="biller-gate" class="notice">Connect your authorized biller wallet to view insights.</div>
+        
+        <div id="biller-content" class="hidden">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="sub" style="margin:0">Total Revenue</div>
+                    <div class="stat-val" id="biller-vol">0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="sub" style="margin:0">Payments Received</div>
+                    <div class="stat-val" id="biller-tx-count">0</div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>Incoming payments</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>#</th><th>Reference</th><th>Amount</th><th>Payer</th><th>Date</th></tr></thead>
+                        <tbody id="biller-payments"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="view-admin" class="view hidden">
+        <h1>Admin Console</h1>
+        <p class="sub">Register and manage platform billers.</p>
+        
+        <div id="admin-gate" class="notice">Connect the contract admin wallet to access this area.</div>
+        
+        <div id="admin-content" class="hidden">
+            <div class="panel">
+                <h2>Register a Biller</h2>
+                <div class="row-grid">
+                    <div><label>Name</label><input id="adm-name" placeholder="e.g. Utility Co"></div>
+                    <div>
+                        <label>Category</label>
+                        <select id="adm-cat">
+                            <option>Electricity</option><option>Water</option><option>Internet</option>
+                            <option>Airtime & Data</option><option>TV Subscription</option>
+                            <option>Education</option><option>Other</option>
+                        </select>
+                    </div>
+                    <div><label>Payout Wallet</label><input id="adm-wallet" placeholder="0x..."></div>
+                    <div><button class="btn w-100" style="margin-top:1.4rem;" onclick="addBiller()">Register</button></div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>Registered Billers</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Wallet</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="admin-billers"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<div id="toast-container"></div>
+
+<script>
+/* =========================================
+   Configuration & ABI
+========================================= */
+// ⚠️ Replace with your deployed contract address!
+const CONTRACT_ADDRESS = "0xD7f9f82998a30bF040796Ae959642e24434b44B0"; 
+
+const ABI = [
+    "function addBiller(string name, string category, address wallet) returns (uint256 id)",
+    "function admin() view returns (address)",
+    "function billerCount() view returns (uint256)",
+    "function cancelSchedule(uint256 id)",
+    "function createSchedule(uint256 bid, string ref, uint256 intervalDays, uint256 count) payable returns (uint256 id)",
+    "function getBiller(uint256 id) view returns (string, string, address, bool)",
+    "function getReceipt(uint256 id) view returns (address, uint256, string, uint256, uint256)",
+    "function getSchedule(uint256 id) view returns (address, uint256, string, uint256)",
+    "function getScheduleState(uint256 id) view returns (uint256, uint256, uint256, bool)",
+    "function pay(uint256 bid, string ref) payable",
+    "function pay()", // Overloaded fallback
+    "function receiptCount() view returns (uint256)",
+    "function receiptsOf(address a) view returns (uint256[])",
+    "function receiptsOfWallet(address a) view returns (uint256[])",
+    "function runSchedule(uint256 id)",
+    "function scheduleCount() view returns (uint256)",
+    "function setBillerActive(uint256 id, bool active)",
+    "function schedulesOf(address a) view returns (uint256[])"
+];
+
+/* =========================================
+   State & Setup
+========================================= */
+let provider, signer, roContract, rwContract, account, isContractAdmin = false;
+let currentView = 'home';
+let selectedBillerId = null;
+let payMode = 'now';
+let cachedBillers = [];
+
+const icons = { "Electricity":"⚡", "Water":"💧", "Internet":"🌐", "Airtime & Data":"📱", "TV Subscription":"📺", "Education":"🎓", "Other":"🧾" };
+
+window.addEventListener('load', async () => {
+    if (window.ethereum) {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        roContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+        
+        // Listen for account changes
+        window.ethereum.on('accountsChanged', (accounts) => {
+            if(accounts.length > 0) initSigner(accounts[0]);
+            else disconnectWallet();
+        });
+        
+        // Auto-connect if already authorized
+        try {
+            const accounts = await provider.send("eth_accounts", []);
+            if(accounts.length > 0) await initSigner(accounts[0]);
+        } catch(e) {}
+    } else {
+        toast("Please install MetaMask to use Web3 features.", "error");
+    }
+    nav('home');
+});
+
+/* =========================================
+   Wallet Connection
+========================================= */
+async function connectWallet() {
+    if (!window.ethereum) return toast("No crypto wallet found.", "error");
+    try {
+        const accounts = await provider.send("eth_requestAccounts", []);
+        await initSigner(accounts[0]);
+    } catch (e) { toast(e.message, "error"); }
+}
+
+async function initSigner(addr) {
+    account = addr;
+    signer = await provider.getSigner();
+    rwContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    
+    document.getElementById('btn-connect').innerText = addr.substring(0,6) + "..." + addr.substring(38);
+    document.getElementById('btn-connect').classList.add('ghost');
+    
+    try {
+        const contractAdmin = await roContract.admin();
+        isContractAdmin = (contractAdmin.toLowerCase() === account.toLowerCase());
+    } catch(e) { console.warn("Failed to fetch admin - checking contract address."); }
+    
+    // Refresh current view data now that we are connected
+    refreshCurrentView();
+}
+
+function disconnectWallet() {
+    account = null; signer = null; rwContract = null; isContractAdmin = false;
+    document.getElementById('btn-connect').innerText = "Connect Wallet";
+    document.getElementById('btn-connect').classList.remove('ghost');
+    refreshCurrentView();
+}
+
+/* =========================================
+   Navigation & UI Routing
+========================================= */
+function nav(viewId) {
+    currentView = viewId;
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.querySelectorAll('.links a').forEach(a => a.classList.remove('active'));
+    
+    document.getElementById(`view-${viewId}`).classList.remove('hidden');
+    document.getElementById(`nav-${viewId}`).classList.add('active');
+    
+    refreshCurrentView();
+}
+
+function refreshCurrentView() {
+    if (!roContract) return;
+    if (currentView === 'pay') loadPayView();
+    if (currentView === 'payments') loadPaymentsView();
+    if (currentView === 'biller') loadBillerView();
+    if (currentView === 'admin') loadAdminView();
+}
+
+/* =========================================
+   Views Logic
+========================================= */
+
+// --- PAY VIEW ---
+async function loadPayView() {
+    try {
+        const count = await roContract.billerCount();
+        let html = '';
+        cachedBillers = [];
+        
+        for(let i=0; i<count; i++) {
+            const b = await roContract.getBiller(i);
+            if(b[3]) { // if active
+                cachedBillers.push({id: i, name: b[0], cat: b[1], wallet: b[2]});
+                const icon = icons[b[1]] || "🧾";
+                html += `<div class="chip" id="chip-${i}" onclick="selectBiller(${i})">
+                            <strong style="margin-bottom:2px">${icon} ${escapeHtml(b[0])}</strong>
+                            <small>${escapeHtml(b[1])}</small>
+                         </div>`;
+            }
+        }
+        document.getElementById('biller-chips').innerHTML = html || '<p class="sub">No active billers available.</p>';
+    } catch(e) {
+        document.getElementById('biller-chips').innerHTML = '<p class="sub" style="color:var(--danger)">Contract not found. Please verify CONTRACT_ADDRESS.</p>';
+    }
+}
+
+function selectBiller(id) {
+    selectedBillerId = id;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+    document.getElementById(`chip-${id}`).classList.add('on');
+}
+
+function setPayMode(mode) {
+    payMode = mode;
+    document.getElementById('tab-paynow').className = mode === 'now' ? 'on' : '';
+    document.getElementById('tab-schedule').className = mode === 'sch' ? 'on' : '';
+    
+    document.getElementById('schedule-fields').className = mode === 'sch' ? 'row-grid' : 'hidden';
+    document.getElementById('lbl-amount').innerText = mode === 'sch' ? 'Amount per payment (Tokens)' : 'Amount (Tokens)';
+    document.getElementById('btn-execute-pay').innerText = mode === 'sch' ? 'Deposit & Schedule' : 'Pay now';
+    calcTotal();
+}
+
+function calcTotal() {
+    if(payMode === 'now') {
+        document.getElementById('pay-summary').classList.add('hidden');
+        return;
+    }
+    const amt = parseFloat(document.getElementById('pay-amt').value || 0);
+    const count = parseInt(document.getElementById('pay-count').value || 0);
+    const days = parseInt(document.getElementById('pay-interval').value || 0);
+    
+    if(amt > 0 && count > 0) {
+        document.getElementById('pay-summary').classList.remove('hidden');
+        document.getElementById('pay-summary').innerHTML = 
+            `<b>Total deposit: ${amt * count} Tokens</b>. <br>Funds will be released ${count} time(s) every ${days} day(s). The first payment executes immediately.`;
+    } else {
+        document.getElementById('pay-summary').classList.add('hidden');
+    }
+}
+
+async function executePayment() {
+    if(!account) return toast("Connect your wallet first", "error");
+    if(selectedBillerId === null) return toast("Select a biller", "error");
+    
+    const ref = document.getElementById('pay-ref').value.trim();
+    const amt = document.getElementById('pay-amt').value;
+    
+    if(!ref) return toast("Enter account reference", "error");
+    if(!amt || amt <= 0) return toast("Enter a valid amount", "error");
+
+    try {
+        let tx;
+        if(payMode === 'now') {
+            const val = ethers.parseEther(amt.toString());
+            tx = await rwContract["pay(uint256,string)"](selectedBillerId, ref, {value: val});
+        } else {
+            const count = parseInt(document.getElementById('pay-count').value);
+            const days = parseInt(document.getElementById('pay-interval').value);
+            const totalVal = ethers.parseEther((amt * count).toString());
+            tx = await rwContract.createSchedule(selectedBillerId, ref, days, count, {value: totalVal});
+        }
+        
+        toast("Transaction submitted. Waiting for confirmation...", "success");
+        await tx.wait();
+        toast("Payment successful!", "success");
+        document.getElementById('pay-ref').value = "";
+        document.getElementById('pay-amt').value = "";
+        calcTotal();
+    } catch(e) {
+        console.error(e);
+        toast(e.reason || "Transaction failed or cancelled", "error");
+    }
+}
+
+// --- MY PAYMENTS VIEW ---
+async function loadPaymentsView() {
+    if(!account) {
+        document.getElementById('my-receipts').innerHTML = '<p class="sub">Connect wallet to view.</p>';
+        document.getElementById('my-schedules').innerHTML = '<p class="sub">Connect wallet to view.</p>';
+        return;
+    }
+    
+    try {
+        // Load Receipts
+        const rIds = await roContract.receiptsOf(account);
+        let rh = '';
+        for(let i = rIds.length - 1; i >= 0; i--) {
+            const id = rIds[i];
+            const r = await roContract.getReceipt(id);
+            const b = await roContract.getBiller(r[3]); // Note: Struct is (payer, amount, ref, biller, date). wait, getReceipt ABI returns (address, uint256, string, uint256, uint256) -> payer, billerId, ref, amount, date based on provided usage code
+            // Actually let's fetch carefully based on provided snippet usage: r[1] is billerId, r[2] ref, r[3] amt, r[4] date.
+            const billerId = r[1];
+            const bData = await roContract.getBiller(billerId);
+            
+            rh += `<div class="rec">
+                <div class="top"><div class="badge neutral">Receipt #${id}</div> <small class="text-mut">${formatDate(r[4])}</small></div>
+                <p><b>${escapeHtml(bData[0])}</b> (${escapeHtml(bData[1])})</p>
+                <p class="sub" style="font-size:0.9rem; margin-bottom:0.5rem">Ref: <span class="mono">${escapeHtml(r[2])}</span></p>
+                <h3 style="color:var(--primary)">${formatBot(r[3])}</h3>
+            </div>`;
+        }
+        document.getElementById('my-receipts').innerHTML = rh || '<p class="sub">No payments yet.</p>';
+        
+        // Load Schedules
+        const sIds = await roContract.schedulesOf(account);
+        let sh = '';
+        const now = Date.now() / 1000;
+        
+        for(let i = sIds.length - 1; i >= 0; i--) {
+            const id = sIds[i];
+            const s = await roContract.getSchedule(id); // payer, billerId, ref, amountPerTx
+            const st = await roContract.getScheduleState(id); // interval, left, nextDate, active
+            const bData = await roContract.getBiller(s[1]);
+            
+            const isDue = st[3] && Number(st[2]) <= now;
+            const statusBadge = st[3] ? `<span class="badge ok">Active</span>` : `<span class="badge off">Finished/Cancelled</span>`;
+            
+            sh += `<div class="rec">
+                <div class="top">${statusBadge} <small class="text-mut">Sched #${id}</small></div>
+                <p><b>${escapeHtml(bData[0])}</b></p>
+                <p class="sub" style="font-size:0.85rem; margin-bottom:0.5rem">Ref: <span class="mono">${escapeHtml(s[2])}</span></p>
+                <p style="font-size:0.9rem"><b>${formatBot(s[3])}</b> / ${Number(st[0])/86400} days</p>
+                <p style="font-size:0.85rem; margin-bottom: 1rem" class="text-mut">${st[1]} payment(s) left</p>
+                <div style="display:flex; gap:10px;">
+                    ${isDue ? `<button class="btn" style="flex:1" onclick="runSchedule(${id})">Run Due</button>` : ''}
+                    ${st[3] ? `<button class="btn danger" style="flex:1" onclick="cancelSchedule(${id})">Cancel</button>` : ''}
+                </div>
+            </div>`;
+        }
+        document.getElementById('my-schedules').innerHTML = sh || '<p class="sub">No schedules yet.</p>';
+        
+    } catch(e) { console.error(e); }
+}
+
+async function runSchedule(id) {
+    try {
+        const tx = await rwContract.runSchedule(id);
+        toast("Running schedule...", "success");
+        await tx.wait();
+        toast("Schedule paid successfully", "success");
+        loadPaymentsView();
+    } catch(e) { toast(e.reason || "Action failed", "error"); }
+}
+
+async function cancelSchedule(id) {
+    if(!confirm("Cancel and refund remaining balance?")) return;
+    try {
+        const tx = await rwContract.cancelSchedule(id);
+        toast("Cancelling schedule...", "success");
+        await tx.wait();
+        toast("Schedule cancelled and refunded", "success");
+        loadPaymentsView();
+    } catch(e) { toast(e.reason || "Action failed", "error"); }
+}
+
+async function verifyReceipt() {
+    const id = document.getElementById('verify-id').value;
+    if(id === "") return;
+    const res = document.getElementById('verify-result');
+    try {
+        const r = await roContract.getReceipt(id);
+        const b = await roContract.getBiller(r[1]);
+        res.innerHTML = `<div class="panel" style="background:#f0fdf4; border-color:#86efac; margin:0">
+            <h3 style="color:#166534">✅ Valid Receipt</h3>
+            <p style="font-size:0.9rem; margin-top:0.5rem"><b>Biller:</b> ${escapeHtml(b[0])}<br><b>Ref:</b> ${escapeHtml(r[2])}<br><b>Amount:</b> ${formatBot(r[3])}<br><b>Date:</b> ${formatDate(r[4])}<br><b>Payer:</b> <span class="mono">${r[0]}</span></p>
+        </div>`;
+    } catch(e) {
+        res.innerHTML = `<div class="panel" style="background:#fef2f2; border-color:#fca5a5; margin:0; color:#991b1b">✖ Receipt not found or invalid.</div>`;
+    }
+}
+
+// --- BILLER VIEW ---
+async function loadBillerView() {
+    if(!account) {
+        document.getElementById('biller-gate').classList.remove('hidden');
+        document.getElementById('biller-content').classList.add('hidden');
+        return;
+    }
+    document.getElementById('biller-gate').classList.add('hidden');
+    document.getElementById('biller-content').classList.remove('hidden');
+    
+    try {
+        const rIds = [...await roContract.receiptsOfWallet(account)].reverse();
+        let sum = 0n;
+        let html = '';
+        
+        for(let i=0; i<rIds.length; i++) {
+            const id = rIds[i];
+            const r = await roContract.getReceipt(id);
+            sum += r[3];
+            html += `<tr>
+                <td>${id}</td>
+                <td><span class="mono">${escapeHtml(r[2])}</span></td>
+                <td><b>${formatBot(r[3])}</b></td>
+                <td class="mono">${r[0].substring(0,8)}...</td>
+                <td>${formatDate(r[4])}</td>
+            </tr>`;
+        }
+        
+        document.getElementById('biller-vol').innerText = formatBot(sum);
+        document.getElementById('biller-tx-count').innerText = rIds.length;
+        document.getElementById('biller-payments').innerHTML = html || '<tr><td colspan="5" class="sub text-center">No incoming payments found for this wallet.</td></tr>';
+        
+    } catch(e) { console.error(e); }
+}
+
+// --- ADMIN VIEW ---
+async function loadAdminView() {
+    if(!account || !isContractAdmin) {
+        document.getElementById('admin-gate').classList.remove('hidden');
+        document.getElementById('admin-content').classList.add('hidden');
+        return;
+    }
+    
+    document.getElementById('admin-gate').classList.add('hidden');
+    document.getElementById('admin-content').classList.remove('hidden');
+    
+    try {
+        const n = await roContract.billerCount();
+        let html = '';
+        for(let i=0; i<n; i++) {
+            const b = await roContract.getBiller(i);
+            html += `<tr>
+                <td>${i}</td>
+                <td><b>${escapeHtml(b[0])}</b></td>
+                <td>${escapeHtml(b[1])}</td>
+                <td class="mono">${b[2].substring(0,8)}...</td>
+                <td>${b[3] ? '<span class="badge ok">Active</span>' : '<span class="badge off">Disabled</span>'}</td>
+                <td><button class="btn ghost ${b[3]?'danger':''}" style="padding:0.3rem 0.6rem; font-size:0.8rem" onclick="toggleBiller(${i}, ${!b[3]})">${b[3] ? 'Disable' : 'Enable'}</button></td>
+            </tr>`;
+        }
+        document.getElementById('admin-billers').innerHTML = html || '<tr><td colspan="6" class="sub text-center">No billers registered.</td></tr>';
+    } catch(e) { console.error(e); }
+}
+
+async function addBiller() {
+    const name = document.getElementById('adm-name').value.trim();
+    const cat = document.getElementById('adm-cat').value;
+    const wallet = document.getElementById('adm-wallet').value.trim();
+    
+    if(!name || !ethers.isAddress(wallet)) return toast("Valid name and wallet address required.", "error");
+    
+    try {
+        const tx = await rwContract.addBiller(name, cat, wallet);
+        toast("Registering biller...", "success");
+        await tx.wait();
+        toast("Biller registered!", "success");
+        document.getElementById('adm-name').value = "";
+        document.getElementById('adm-wallet').value = "";
+        loadAdminView();
+    } catch(e) { toast(e.reason || "Transaction failed", "error"); }
+}
+
+async function toggleBiller(id, activate) {
+    try {
+        const tx = await rwContract["setBillerActive(uint256,bool)"](id, activate);
+        toast("Updating biller status...", "success");
+        await tx.wait();
+        toast("Status updated", "success");
+        loadAdminView();
+    } catch(e) { toast(e.reason || "Transaction failed", "error"); }
+}
+
+/* =========================================
+   Utilities
+========================================= */
+function toast(msg, type="success") {
+    const box = document.createElement("div");
+    box.className = `toast ${type}`;
+    box.innerText = msg;
+    document.getElementById("toast-container").appendChild(box);
+    setTimeout(() => box.remove(), 4000);
+}
+
+function formatBot(weiValue) {
+    return ethers.formatEther(weiValue) + " Tokens";
+}
+
+function formatDate(timestamp) {
+    const d = new Date(Number(timestamp) * 1000);
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+function escapeHtml(unsafe) {
+    return (unsafe||"").toString()
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+</script>
+</body>
+</html>
